@@ -1,0 +1,8 @@
+: 1
+name: tetris
+version: 0.1.0-a.0.z
+summary: Tetris Game
+license: TODO
+depends: * build2 >= 0.12.0
+depends: * bpkg >= 0.12.0
+requires: sfml-graphics ; SFML Graphics Module

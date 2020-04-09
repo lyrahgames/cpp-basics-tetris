@@ -1,0 +1,8 @@
+cxx.std = latest
+
+using cxx
+
+hxx{*}: extension = hpp
+cxx{*}: extension = cpp
+
+cxx.poptions =+ -I"$out_root" -I"$src_root"
