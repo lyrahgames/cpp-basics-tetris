@@ -28,14 +28,18 @@ class application {
  private:
   static constexpr size_t tetrimino_size = 18;
   static constexpr size_t border_size = 3;
+  static constexpr size_t outline_size = 10;
   static constexpr size_t min_screen_width =
-      playfield::cols * (tetrimino_size + border_size) + border_size;
+      2 * (playfield::cols * (tetrimino_size + border_size) + border_size) +
+      2 * outline_size;
   static constexpr size_t min_screen_height =
-      playfield::rows * (tetrimino_size + border_size) + border_size;
+      playfield::rows * (tetrimino_size + border_size) + border_size +
+      2 * outline_size;
 
   void draw_playfield();
   void draw_tetrimino();
   void draw_last();
+  void draw_next();
 
   // tetris game{};
   ::tetris::game g;

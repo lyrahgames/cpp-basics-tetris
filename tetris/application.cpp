@@ -113,7 +113,9 @@ void application::process_events() {
 }
 
 void application::render() {
+  for (auto& x : pixels) x = 0;
   draw_playfield();
+  draw_next();
   draw_last();
   draw_tetrimino();
   texture.update(pixels.data());
@@ -131,8 +133,6 @@ void application::resize() {
 }
 
 void application::draw_playfield() {
-  pixels.clear();
-
   for (int j = 0; j < playfield::rows; ++j) {
     for (int i = 0; i < playfield::cols; ++i) {
       const auto c = label_color(g.field(j, i));
@@ -140,11 +140,11 @@ void application::draw_playfield() {
       for (int q = 0; q < tetrimino_size; ++q) {
         for (int p = 0; p < tetrimino_size; ++p) {
           const int index =
-              4 * (screen_width *
-                       (q + j * (tetrimino_size + border_size) + border_size +
-                        screen_height / 2 - min_screen_height / 2) +
+              4 * (screen_width * (q + j * (tetrimino_size + border_size) +
+                                   border_size + outline_size +
+                                   screen_height / 2 - min_screen_height / 2) +
                    (p + i * (tetrimino_size + border_size) + border_size +
-                    screen_width / 2 - min_screen_width / 2));
+                    outline_size + screen_width / 2 - min_screen_width / 2));
           pixels[index + 0] = c.r;
           pixels[index + 1] = c.g;
           pixels[index + 2] = c.b;
@@ -163,14 +163,41 @@ void application::draw_tetrimino() {
       for (int p = 0; p < tetrimino_size; ++p) {
         const int index =
             4 *
-            (screen_width *
-                 (q +
-                  (g.current.offset[0] + e[0]) *
-                      (tetrimino_size + border_size) +
-                  border_size + screen_height / 2 - min_screen_height / 2) +
+            (screen_width * (q +
+                             (g.current.offset[0] + e[0]) *
+                                 (tetrimino_size + border_size) +
+                             border_size + outline_size + screen_height / 2 -
+                             min_screen_height / 2) +
              (p +
               (g.current.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + screen_width / 2 - min_screen_width / 2));
+              border_size + outline_size + screen_width / 2 -
+              min_screen_width / 2));
+        pixels[index + 0] = c.r;
+        pixels[index + 1] = c.g;
+        pixels[index + 2] = c.b;
+        pixels[index + 3] = c.a;
+      }
+    }
+  }
+}
+
+void application::draw_next() {
+  const auto c = label_color(g.next.type);
+
+  for (const auto& e : g.next.shape) {
+    for (int q = 0; q < tetrimino_size; ++q) {
+      for (int p = 0; p < tetrimino_size; ++p) {
+        const int index =
+            4 * (screen_width * (q +
+                                 (g.next.offset[0] + e[0]) *
+                                     (tetrimino_size + border_size) +
+                                 border_size + outline_size +
+                                 screen_height / 2 - min_screen_height / 2) +
+                 (p +
+                  (playfield::cols + g.next.offset[1] + e[1]) *
+                      (tetrimino_size + border_size) +
+                  2 * border_size + outline_size + screen_width / 2 -
+                  min_screen_width / 2));
         pixels[index + 0] = c.r;
         pixels[index + 1] = c.g;
         pixels[index + 2] = c.b;
@@ -191,23 +218,26 @@ void application::draw_last() {
             (screen_width *
                  (q +
                   (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
-                  border_size + screen_height / 2 - min_screen_height / 2) +
+                  border_size + outline_size + screen_height / 2 -
+                  min_screen_height / 2) +
              (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + screen_width / 2 - min_screen_width / 2));
+              border_size + outline_size + screen_width / 2 -
+              min_screen_width / 2));
         pixels[index + 0] = c.r;
         pixels[index + 1] = c.g;
         pixels[index + 2] = c.b;
         pixels[index + 3] = 200;
 
         index =
-            4 *
-            (screen_width *
-                 (q +
-                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
-                  border_size + screen_height / 2 - min_screen_height / 2) +
-             ((tetrimino_size - 1 - p) +
-              (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + screen_width / 2 - min_screen_width / 2));
+            4 * (screen_width * (q +
+                                 (g.last.offset[0] + e[0]) *
+                                     (tetrimino_size + border_size) +
+                                 border_size + outline_size +
+                                 screen_height / 2 - min_screen_height / 2) +
+                 ((tetrimino_size - 1 - p) +
+                  (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
+                  border_size + outline_size + screen_width / 2 -
+                  min_screen_width / 2));
 
         pixels[index + 0] = c.r;
         pixels[index + 1] = c.g;
@@ -223,9 +253,11 @@ void application::draw_last() {
             (screen_width *
                  (q +
                   (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
-                  border_size + screen_height / 2 - min_screen_height / 2) +
+                  border_size + outline_size + screen_height / 2 -
+                  min_screen_height / 2) +
              (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + screen_width / 2 - min_screen_width / 2));
+              border_size + outline_size + screen_width / 2 -
+              min_screen_width / 2));
         pixels[index + 0] = c.r;
         pixels[index + 1] = c.g;
         pixels[index + 2] = c.b;
@@ -236,9 +268,11 @@ void application::draw_last() {
             (screen_width *
                  ((tetrimino_size - 1 - q) +
                   (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
-                  border_size + screen_height / 2 - min_screen_height / 2) +
+                  border_size + outline_size + screen_height / 2 -
+                  min_screen_height / 2) +
              (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + screen_width / 2 - min_screen_width / 2));
+              border_size + outline_size + screen_width / 2 -
+              min_screen_width / 2));
 
         pixels[index + 0] = c.r;
         pixels[index + 1] = c.g;

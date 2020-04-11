@@ -30,8 +30,9 @@ struct game {
   }
 
   void new_tetromino() {
-    current = tetromino{static_cast<label>(dist(rng))};
-    current.offset[1] = (playfield::cols - 1) / 2 - (current.size - 1) / 2;
+    current = next;
+    next = tetromino{static_cast<label>(dist(rng))};
+    next.offset[1] = (playfield::cols - 1) / 2 - (next.size - 1) / 2;
     last = last_position(current, field);
   }
 
@@ -63,6 +64,7 @@ struct game {
   void restart() {
     game_over = false;
     new_tetromino();
+    new_tetromino();
     field.clear();
   }
 
@@ -71,6 +73,7 @@ struct game {
   playfield field;
   tetromino current;
   tetromino last;
+  tetromino next;
   static constexpr float time_step = 0.5;
   std::mt19937 rng{std::random_device{}()};
   seven_bag_distribution dist{};
