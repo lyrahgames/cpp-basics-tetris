@@ -35,6 +35,7 @@ class application {
 
   void draw_playfield();
   void draw_tetrimino();
+  void draw_last();
 
   // tetris game{};
   ::tetris::game g;

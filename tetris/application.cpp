@@ -3,6 +3,40 @@
 
 namespace tetris {
 
+namespace {
+
+inline sf::Color label_color(label l) noexcept {
+  switch (l) {
+    case label::I:
+      return sf::Color{50, 180, 255};
+      break;
+    case label::O:
+      return sf::Color{220, 200, 30};
+      break;
+    case label::T:
+      return sf::Color{200, 50, 200};
+      break;
+    case label::S:
+      return sf::Color{50, 200, 50};
+      break;
+    case label::Z:
+      return sf::Color{255, 50, 20};
+      break;
+    case label::J:
+      return sf::Color{80, 80, 230};
+      break;
+    case label::L:
+      return sf::Color{255, 100, 20};
+      break;
+    case label::empty:
+      return sf::Color{50, 50, 50};
+      break;
+  }
+  return sf::Color{};
+}
+
+}  // namespace
+
 application::application()
     : screen_width{min_screen_width},
       screen_height{min_screen_height},
@@ -80,6 +114,7 @@ void application::process_events() {
 
 void application::render() {
   draw_playfield();
+  draw_last();
   draw_tetrimino();
   texture.update(pixels.data());
   window.clear();
@@ -100,49 +135,7 @@ void application::draw_playfield() {
 
   for (int j = 0; j < playfield::rows; ++j) {
     for (int i = 0; i < playfield::cols; ++i) {
-      uint8_t red = 0, green = 0, blue = 0;
-      switch (g.field(j, i)) {
-        case label::I:
-          red = 0;
-          green = 128;
-          blue = 128;
-          break;
-        case label::O:
-          red = 128;
-          green = 128;
-          blue = 0;
-          break;
-        case label::T:
-          red = 128;
-          green = 0;
-          blue = 128;
-          break;
-        case label::S:
-          red = 0;
-          green = 128;
-          blue = 0;
-          break;
-        case label::Z:
-          red = 128;
-          green = 0;
-          blue = 0;
-          break;
-        case label::J:
-          red = 128;
-          green = 128;
-          blue = 255;
-          break;
-        case label::L:
-          red = 255;
-          green = 128;
-          blue = 0;
-          break;
-        case label::empty:
-          red = 200;
-          green = 200;
-          blue = 200;
-          break;
-      }
+      const auto c = label_color(g.field(j, i));
 
       for (int q = 0; q < tetrimino_size; ++q) {
         for (int p = 0; p < tetrimino_size; ++p) {
@@ -152,10 +145,10 @@ void application::draw_playfield() {
                         screen_height / 2 - min_screen_height / 2) +
                    (p + i * (tetrimino_size + border_size) + border_size +
                     screen_width / 2 - min_screen_width / 2));
-          pixels[index + 0] = red;
-          pixels[index + 1] = green;
-          pixels[index + 2] = blue;
-          pixels[index + 3] = 255;
+          pixels[index + 0] = c.r;
+          pixels[index + 1] = c.g;
+          pixels[index + 2] = c.b;
+          pixels[index + 3] = c.a;
         }
       }
     }
@@ -163,49 +156,7 @@ void application::draw_playfield() {
 }
 
 void application::draw_tetrimino() {
-  int red, green, blue;
-  switch (g.current.type) {
-    case label::I:
-      red = 0;
-      green = 128;
-      blue = 255;
-      break;
-    case label::O:
-      red = 255;
-      green = 255;
-      blue = 0;
-      break;
-    case label::T:
-      red = 128;
-      green = 0;
-      blue = 128;
-      break;
-    case label::S:
-      red = 0;
-      green = 255;
-      blue = 0;
-      break;
-    case label::Z:
-      red = 255;
-      green = 0;
-      blue = 0;
-      break;
-    case label::J:
-      red = 0;
-      green = 0;
-      blue = 255;
-      break;
-    case label::L:
-      red = 255;
-      green = 128;
-      blue = 0;
-      break;
-    case label::empty:
-      red = 200;
-      green = 200;
-      blue = 200;
-      break;
-  }
+  const auto c = label_color(g.current.type);
 
   for (const auto& e : g.current.shape) {
     for (int q = 0; q < tetrimino_size; ++q) {
@@ -220,10 +171,79 @@ void application::draw_tetrimino() {
              (p +
               (g.current.offset[1] + e[1]) * (tetrimino_size + border_size) +
               border_size + screen_width / 2 - min_screen_width / 2));
-        pixels[index + 0] = red;
-        pixels[index + 1] = green;
-        pixels[index + 2] = blue;
-        pixels[index + 3] = 255;
+        pixels[index + 0] = c.r;
+        pixels[index + 1] = c.g;
+        pixels[index + 2] = c.b;
+        pixels[index + 3] = c.a;
+      }
+    }
+  }
+}
+
+void application::draw_last() {
+  const auto c = label_color(g.last.type);
+
+  for (const auto& e : g.last.shape) {
+    for (int q = 0; q < tetrimino_size; ++q) {
+      for (int p = 0; p < border_size; ++p) {
+        int index =
+            4 *
+            (screen_width *
+                 (q +
+                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
+                  border_size + screen_height / 2 - min_screen_height / 2) +
+             (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
+              border_size + screen_width / 2 - min_screen_width / 2));
+        pixels[index + 0] = c.r;
+        pixels[index + 1] = c.g;
+        pixels[index + 2] = c.b;
+        pixels[index + 3] = 200;
+
+        index =
+            4 *
+            (screen_width *
+                 (q +
+                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
+                  border_size + screen_height / 2 - min_screen_height / 2) +
+             ((tetrimino_size - 1 - p) +
+              (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
+              border_size + screen_width / 2 - min_screen_width / 2));
+
+        pixels[index + 0] = c.r;
+        pixels[index + 1] = c.g;
+        pixels[index + 2] = c.b;
+        pixels[index + 3] = 200;
+      }
+    }
+
+    for (int q = 0; q < border_size; ++q) {
+      for (int p = 0; p < tetrimino_size; ++p) {
+        int index =
+            4 *
+            (screen_width *
+                 (q +
+                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
+                  border_size + screen_height / 2 - min_screen_height / 2) +
+             (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
+              border_size + screen_width / 2 - min_screen_width / 2));
+        pixels[index + 0] = c.r;
+        pixels[index + 1] = c.g;
+        pixels[index + 2] = c.b;
+        pixels[index + 3] = 200;
+
+        index =
+            4 *
+            (screen_width *
+                 ((tetrimino_size - 1 - q) +
+                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
+                  border_size + screen_height / 2 - min_screen_height / 2) +
+             (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
+              border_size + screen_width / 2 - min_screen_width / 2));
+
+        pixels[index + 0] = c.r;
+        pixels[index + 1] = c.g;
+        pixels[index + 2] = c.b;
+        pixels[index + 3] = 200;
       }
     }
   }

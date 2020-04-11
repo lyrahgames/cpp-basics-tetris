@@ -12,7 +12,7 @@ struct tetromino {
   explicit tetromino(label l) : type(l) {
     switch (l) {
       case label::I:
-        shape = decltype(shape){{{0, 1}, {1, 1}, {2, 1}, {3, 1}}};
+        shape = decltype(shape){{{1, 0}, {1, 1}, {1, 2}, {1, 3}}};
         size = 4;
         break;
       case label::O:
@@ -20,19 +20,19 @@ struct tetromino {
         size = 2;
         break;
       case label::T:
-        shape = decltype(shape){{{0, 1}, {1, 1}, {2, 1}, {1, 2}}};
+        shape = decltype(shape){{{1, 0}, {1, 1}, {1, 2}, {2, 1}}};
         break;
       case label::S:
-        shape = decltype(shape){{{1, 0}, {2, 0}, {0, 1}, {1, 1}}};
+        shape = decltype(shape){{{0, 1}, {0, 2}, {1, 0}, {1, 1}}};
         break;
       case label::Z:
-        shape = decltype(shape){{{0, 0}, {1, 0}, {1, 1}, {2, 1}}};
+        shape = decltype(shape){{{0, 0}, {0, 1}, {1, 1}, {1, 2}}};
         break;
       case label::J:
-        shape = decltype(shape){{{1, 0}, {1, 1}, {1, 2}, {0, 2}}};
+        shape = decltype(shape){{{0, 1}, {1, 1}, {2, 1}, {2, 0}}};
         break;
       case label::L:
-        shape = decltype(shape){{{1, 0}, {1, 1}, {1, 2}, {2, 2}}};
+        shape = decltype(shape){{{0, 1}, {1, 1}, {2, 1}, {2, 2}}};
         break;
     }
   }

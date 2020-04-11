@@ -14,21 +14,25 @@ struct game {
   void move_right() {
     const auto tmp = ::tetris::move_right(current);
     if (!is_colliding(tmp, field)) current = tmp;
+    last = last_position(current, field);
   }
 
   void move_left() {
     const auto tmp = ::tetris::move_left(current);
     if (!is_colliding(tmp, field)) current = tmp;
+    last = last_position(current, field);
   }
 
   void rotate() {
     const auto tmp = ::tetris::rotate(current);
     if (!is_colliding(tmp, field)) current = tmp;
+    last = last_position(current, field);
   }
 
   void new_tetromino() {
     current = tetromino{static_cast<label>(dist(rng))};
     current.offset[1] = (playfield::cols - 1) / 2 - (current.size - 1) / 2;
+    last = last_position(current, field);
   }
 
   void new_round() {
@@ -47,6 +51,7 @@ struct game {
     } else {
       current = falling_piece;
     }
+    last = last_position(current, field);
   }
 
   void advance_to_next_round() {
@@ -65,6 +70,7 @@ struct game {
 
   playfield field;
   tetromino current;
+  tetromino last;
   static constexpr float time_step = 0.5;
   std::mt19937 rng{std::random_device{}()};
   seven_bag_distribution dist{};
