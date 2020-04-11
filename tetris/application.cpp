@@ -16,8 +16,8 @@ void application::execute() {
   while (window.isOpen()) {
     const auto new_time = std::chrono::system_clock::now();
     if (std::chrono::duration<float>(new_time - time).count() >=
-        tetris::time_step) {
-      game.advance();
+        game::time_step) {
+      g.advance();
       time = new_time;
     }
 
@@ -50,24 +50,27 @@ void application::process_events() {
             break;
 
           case sf::Keyboard::Space:
+            g.advance_to_next_round();
+            break;
+
           case sf::Keyboard::Down:
-            game.advance();
+            g.advance();
             break;
 
           case sf::Keyboard::R:
-            game.restart();
+            g.restart();
             break;
 
           case sf::Keyboard::Right:
-            game.move_right();
+            g.move_right();
             break;
 
           case sf::Keyboard::Left:
-            game.move_left();
+            g.move_left();
             break;
 
           case sf::Keyboard::Up:
-            game.rotate();
+            g.rotate();
             break;
         }
         break;
@@ -95,46 +98,46 @@ void application::resize() {
 void application::draw_playfield() {
   pixels.clear();
 
-  for (int j = 0; j < tetris::rows; ++j) {
-    for (int i = 0; i < tetris::cols; ++i) {
+  for (int j = 0; j < playfield::rows; ++j) {
+    for (int i = 0; i < playfield::cols; ++i) {
       uint8_t red = 0, green = 0, blue = 0;
-      switch (game.playfield(j, i)) {
-        case tetris::tetrimino::I:
+      switch (g.field(j, i)) {
+        case label::I:
           red = 0;
           green = 128;
-          blue = 255;
+          blue = 128;
           break;
-        case tetris::tetrimino::O:
-          red = 255;
-          green = 255;
+        case label::O:
+          red = 128;
+          green = 128;
           blue = 0;
           break;
-        case tetris::tetrimino::T:
+        case label::T:
           red = 128;
           green = 0;
           blue = 128;
           break;
-        case tetris::tetrimino::S:
+        case label::S:
           red = 0;
-          green = 255;
+          green = 128;
           blue = 0;
           break;
-        case tetris::tetrimino::Z:
-          red = 255;
+        case label::Z:
+          red = 128;
           green = 0;
           blue = 0;
           break;
-        case tetris::tetrimino::J:
-          red = 0;
-          green = 0;
+        case label::J:
+          red = 128;
+          green = 128;
           blue = 255;
           break;
-        case tetris::tetrimino::L:
+        case label::L:
           red = 255;
           green = 128;
           blue = 0;
           break;
-        case tetris::tetrimino::EMPTY:
+        case label::empty:
           red = 200;
           green = 200;
           blue = 200;
@@ -160,19 +163,66 @@ void application::draw_playfield() {
 }
 
 void application::draw_tetrimino() {
-  for (const auto& e : game.current_position) {
+  int red, green, blue;
+  switch (g.current.type) {
+    case label::I:
+      red = 0;
+      green = 128;
+      blue = 255;
+      break;
+    case label::O:
+      red = 255;
+      green = 255;
+      blue = 0;
+      break;
+    case label::T:
+      red = 128;
+      green = 0;
+      blue = 128;
+      break;
+    case label::S:
+      red = 0;
+      green = 255;
+      blue = 0;
+      break;
+    case label::Z:
+      red = 255;
+      green = 0;
+      blue = 0;
+      break;
+    case label::J:
+      red = 0;
+      green = 0;
+      blue = 255;
+      break;
+    case label::L:
+      red = 255;
+      green = 128;
+      blue = 0;
+      break;
+    case label::empty:
+      red = 200;
+      green = 200;
+      blue = 200;
+      break;
+  }
+
+  for (const auto& e : g.current.shape) {
     for (int q = 0; q < tetrimino_size; ++q) {
       for (int p = 0; p < tetrimino_size; ++p) {
         const int index =
             4 *
             (screen_width *
-                 (q + (game.offset[1] + e[1]) * (tetrimino_size + border_size) +
+                 (q +
+                  (g.current.offset[0] + e[0]) *
+                      (tetrimino_size + border_size) +
                   border_size + screen_height / 2 - min_screen_height / 2) +
-             (p + (game.offset[0] + e[0]) * (tetrimino_size + border_size) +
+             (p +
+              (g.current.offset[1] + e[1]) * (tetrimino_size + border_size) +
               border_size + screen_width / 2 - min_screen_width / 2));
-        pixels[index + 0] = 255;
-        pixels[index + 1] = 0;
-        pixels[index + 2] = 0;
+        pixels[index + 0] = red;
+        pixels[index + 1] = green;
+        pixels[index + 2] = blue;
         pixels[index + 3] = 255;
       }
     }

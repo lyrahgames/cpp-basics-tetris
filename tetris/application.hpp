@@ -29,14 +29,15 @@ class application {
   static constexpr size_t tetrimino_size = 18;
   static constexpr size_t border_size = 3;
   static constexpr size_t min_screen_width =
-      tetris::cols * (tetrimino_size + border_size) + border_size;
+      playfield::cols * (tetrimino_size + border_size) + border_size;
   static constexpr size_t min_screen_height =
-      tetris::rows * (tetrimino_size + border_size) + border_size;
+      playfield::rows * (tetrimino_size + border_size) + border_size;
 
   void draw_playfield();
   void draw_tetrimino();
 
-  tetris game{};
+  // tetris game{};
+  ::tetris::game g;
 };
 
 }  // namespace tetris
