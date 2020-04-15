@@ -37,24 +37,23 @@ inline sf::Color label_color(label l) noexcept {
 
 }  // namespace
 
-application::application()
-    : screen_width{min_screen_width},
-      screen_height{min_screen_height},
-      window(sf::VideoMode(screen_width, screen_height), "Tetris") {
+application::application() {
+  sf::ContextSettings settings;
+  settings.antialiasingLevel = 8;
+  window.create(sf::VideoMode(500, 500), "Tetris", sf::Style::Default,
+                settings);
   window.setVerticalSyncEnabled(true);
-  resize();
+  // resize();
+
+  view.setCenter({g.field.cols / 2, g.field.visible_rows / 2});
+  view.setSize(window.getSize().x, window.getSize().y);
+  view.zoom(1 / cell_size);
+  window.setView(view);
 }
 
 void application::execute() {
-  auto time = std::chrono::system_clock::now();
   while (window.isOpen()) {
-    const auto new_time = std::chrono::system_clock::now();
-    if (std::chrono::duration<float>(new_time - time).count() >=
-        game::time_step) {
-      g.advance();
-      time = new_time;
-    }
-
+    g.update();
     process_events();
     render();
   }
@@ -68,12 +67,13 @@ void application::process_events() {
         window.close();
         break;
 
+      case sf::Event::MouseWheelMoved:
+        cell_size *= exp(-event.mouseWheel.delta * 0.05f);
+        cell_size = std::clamp(cell_size, min_cell_size, max_cell_size);
+        resize();
+        break;
+
       case sf::Event::Resized:
-        screen_width =
-            std::max(static_cast<size_t>(event.size.width), min_screen_width);
-        screen_height =
-            std::max(static_cast<size_t>(event.size.height), min_screen_height);
-        // window.setSize({screen_width, screen_height});
         resize();
         break;
 
@@ -113,173 +113,97 @@ void application::process_events() {
 }
 
 void application::render() {
-  for (auto& x : pixels) x = 0;
+  window.clear();
   draw_playfield();
-  draw_next();
+  // draw_next();
   draw_last();
   draw_tetrimino();
-  texture.update(pixels.data());
-  window.clear();
-  window.draw(sprite);
   window.display();
 }
 
 void application::resize() {
-  pixels.resize(4 * screen_width * screen_height);
-  window.setView(sf::View{sf::FloatRect{0, 0, static_cast<float>(screen_width),
-                                        static_cast<float>(screen_height)}});
-  texture.create(screen_width, screen_height);
-  sprite.setTexture(texture, true);
+  view.setSize(window.getSize().x, window.getSize().y);
+  view.zoom(1 / cell_size);
+  window.setView(view);
 }
 
 void application::draw_playfield() {
-  for (int j = 0; j < playfield::rows; ++j) {
-    for (int i = 0; i < playfield::cols; ++i) {
-      const auto c = label_color(g.field(j, i));
+  sf::RectangleShape tetrion{{g.field.cols + 2 * tetrion_border_size,
+                              g.field.visible_rows + 2 * tetrion_border_size}};
+  tetrion.setPosition(-tetrion_border_size, -tetrion_border_size);
+  tetrion.setFillColor(sf::Color::Black);
+  tetrion.setOutlineThickness(tetrion_outline_size);
+  tetrion.setOutlineColor(sf::Color::Red);
+  window.draw(tetrion);
 
-      for (int q = 0; q < tetrimino_size; ++q) {
-        for (int p = 0; p < tetrimino_size; ++p) {
-          const int index =
-              4 * (screen_width * (q + j * (tetrimino_size + border_size) +
-                                   border_size + outline_size +
-                                   screen_height / 2 - min_screen_height / 2) +
-                   (p + i * (tetrimino_size + border_size) + border_size +
-                    outline_size + screen_width / 2 - min_screen_width / 2));
-          pixels[index + 0] = c.r;
-          pixels[index + 1] = c.g;
-          pixels[index + 2] = c.b;
-          pixels[index + 3] = c.a;
-        }
-      }
+  for (int i = 0; i < g.field.visible_rows; ++i) {
+    for (int j = 0; j < g.field.cols; ++j) {
+      sf::RectangleShape box{{1.0f, 1.0f}};
+      // box.setOrigin(-0.05f, -0.05f);
+      box.setPosition(j * 1.0f, (g.field.visible_rows - 1 - i) * 1.0f);
+      box.setFillColor(label_color(g.field(i, j)));
+      box.setOutlineThickness(-cell_outline_size);
+      box.setOutlineColor({0, 0, 0});
+      window.draw(box);
     }
   }
 }
 
 void application::draw_tetrimino() {
   const auto c = label_color(g.current.type);
-
   for (const auto& e : g.current.shape) {
-    for (int q = 0; q < tetrimino_size; ++q) {
-      for (int p = 0; p < tetrimino_size; ++p) {
-        const int index =
-            4 *
-            (screen_width * (q +
-                             (g.current.offset[0] + e[0]) *
-                                 (tetrimino_size + border_size) +
-                             border_size + outline_size + screen_height / 2 -
-                             min_screen_height / 2) +
-             (p +
-              (g.current.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + outline_size + screen_width / 2 -
-              min_screen_width / 2));
-        pixels[index + 0] = c.r;
-        pixels[index + 1] = c.g;
-        pixels[index + 2] = c.b;
-        pixels[index + 3] = c.a;
-      }
-    }
+    sf::RectangleShape box{{1.0f, 1.0f}};
+    // box.setOrigin(-0.05f, -0.05f);
+    box.setPosition(
+        (g.current.offset[1] + e[1]) * 1.0f,
+        (g.field.visible_rows - 1 - g.current.offset[0] - e[0]) * 1.0f);
+    box.setFillColor(c);
+    box.setOutlineThickness(-cell_outline_size);
+    box.setOutlineColor({0, 0, 0});
+    window.draw(box);
   }
 }
 
 void application::draw_next() {
   const auto c = label_color(g.next.type);
 
-  for (const auto& e : g.next.shape) {
-    for (int q = 0; q < tetrimino_size; ++q) {
-      for (int p = 0; p < tetrimino_size; ++p) {
-        const int index =
-            4 * (screen_width * (q +
-                                 (g.next.offset[0] + e[0]) *
-                                     (tetrimino_size + border_size) +
-                                 border_size + outline_size +
-                                 screen_height / 2 - min_screen_height / 2) +
-                 (p +
-                  (playfield::cols + g.next.offset[1] + e[1]) *
-                      (tetrimino_size + border_size) +
-                  2 * border_size + outline_size + screen_width / 2 -
-                  min_screen_width / 2));
-        pixels[index + 0] = c.r;
-        pixels[index + 1] = c.g;
-        pixels[index + 2] = c.b;
-        pixels[index + 3] = c.a;
-      }
-    }
-  }
+  // for (const auto& e : g.next.shape) {
+  //   for (int q = 0; q < tetrimino_size; ++q) {
+  //     for (int p = 0; p < tetrimino_size; ++p) {
+  //       const int index =
+  //           4 * (screen_width * (q +
+  //                                (g.next.offset[0] + e[0]) *
+  //                                    (tetrimino_size + border_size) +
+  //                                border_size + outline_size +
+  //                                screen_height / 2 - min_screen_height / 2) +
+  //                (p +
+  //                 (playfield::cols + g.next.offset[1] + e[1]) *
+  //                     (tetrimino_size + border_size) +
+  //                 2 * border_size + outline_size + screen_width / 2 -
+  //                 min_screen_width / 2));
+  //       pixels[index + 0] = c.r;
+  //       pixels[index + 1] = c.g;
+  //       pixels[index + 2] = c.b;
+  //       pixels[index + 3] = c.a;
+  //     }
+  //   }
+  // }
 }
 
 void application::draw_last() {
   const auto c = label_color(g.last.type);
 
   for (const auto& e : g.last.shape) {
-    for (int q = 0; q < tetrimino_size; ++q) {
-      for (int p = 0; p < border_size; ++p) {
-        int index =
-            4 *
-            (screen_width *
-                 (q +
-                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
-                  border_size + outline_size + screen_height / 2 -
-                  min_screen_height / 2) +
-             (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + outline_size + screen_width / 2 -
-              min_screen_width / 2));
-        pixels[index + 0] = c.r;
-        pixels[index + 1] = c.g;
-        pixels[index + 2] = c.b;
-        pixels[index + 3] = 200;
-
-        index =
-            4 * (screen_width * (q +
-                                 (g.last.offset[0] + e[0]) *
-                                     (tetrimino_size + border_size) +
-                                 border_size + outline_size +
-                                 screen_height / 2 - min_screen_height / 2) +
-                 ((tetrimino_size - 1 - p) +
-                  (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-                  border_size + outline_size + screen_width / 2 -
-                  min_screen_width / 2));
-
-        pixels[index + 0] = c.r;
-        pixels[index + 1] = c.g;
-        pixels[index + 2] = c.b;
-        pixels[index + 3] = 200;
-      }
-    }
-
-    for (int q = 0; q < border_size; ++q) {
-      for (int p = 0; p < tetrimino_size; ++p) {
-        int index =
-            4 *
-            (screen_width *
-                 (q +
-                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
-                  border_size + outline_size + screen_height / 2 -
-                  min_screen_height / 2) +
-             (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + outline_size + screen_width / 2 -
-              min_screen_width / 2));
-        pixels[index + 0] = c.r;
-        pixels[index + 1] = c.g;
-        pixels[index + 2] = c.b;
-        pixels[index + 3] = 200;
-
-        index =
-            4 *
-            (screen_width *
-                 ((tetrimino_size - 1 - q) +
-                  (g.last.offset[0] + e[0]) * (tetrimino_size + border_size) +
-                  border_size + outline_size + screen_height / 2 -
-                  min_screen_height / 2) +
-             (p + (g.last.offset[1] + e[1]) * (tetrimino_size + border_size) +
-              border_size + outline_size + screen_width / 2 -
-              min_screen_width / 2));
-
-        pixels[index + 0] = c.r;
-        pixels[index + 1] = c.g;
-        pixels[index + 2] = c.b;
-        pixels[index + 3] = 200;
-      }
-    }
+    sf::RectangleShape box{
+        {1.0f - 2 * cell_outline_size, 1.0f - 2 * cell_outline_size}};
+    box.setOrigin(-cell_outline_size, -cell_outline_size);
+    box.setPosition(
+        (g.last.offset[1] + e[1]) * 1.0f,
+        (g.field.visible_rows - 1 - g.last.offset[0] - e[0]) * 1.0f);
+    box.setFillColor(sf::Color::Transparent);
+    box.setOutlineThickness(-ghost_cell_outline_size);
+    box.setOutlineColor({c.r, c.g, c.b, 128});
+    window.draw(box);
   }
 }
 

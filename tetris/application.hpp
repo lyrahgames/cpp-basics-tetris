@@ -18,30 +18,23 @@ class application {
   void resize();
 
  private:
-  size_t screen_width;
-  size_t screen_height;
   sf::RenderWindow window;
-  sf::Texture texture{};
-  sf::Sprite sprite{};
-  std::vector<uint8_t> pixels{};
+  sf::View view;
+  float cell_size = 20.0f;
+  float min_cell_size = 15.0f;
+  float max_cell_size = 40.0f;
+  float cell_outline_size = 0.05f;
+  float ghost_cell_outline_size = 0.1f;
+  float tetrion_border_size = 0.5f;
+  float tetrion_outline_size = 0.1f;
+  float outer_border_size = 10.0f;
 
  private:
-  static constexpr size_t tetrimino_size = 18;
-  static constexpr size_t border_size = 3;
-  static constexpr size_t outline_size = 10;
-  static constexpr size_t min_screen_width =
-      2 * (playfield::cols * (tetrimino_size + border_size) + border_size) +
-      2 * outline_size;
-  static constexpr size_t min_screen_height =
-      playfield::rows * (tetrimino_size + border_size) + border_size +
-      2 * outline_size;
-
   void draw_playfield();
   void draw_tetrimino();
   void draw_last();
   void draw_next();
 
-  // tetris game{};
   ::tetris::game g;
 };
 

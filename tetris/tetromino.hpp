@@ -65,7 +65,7 @@ inline tetromino move_left(tetromino t) noexcept {
 }
 
 inline tetromino move_down(tetromino t) noexcept {
-  t.offset[0] += 1;
+  t.offset[0] -= 1;
   return t;
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <tetris/scoring_system.hpp>
 #include <tetris/tetromino.hpp>
 
 namespace tetris {
@@ -12,7 +13,8 @@ struct playfield {
   void clear() noexcept { data = decltype(data){}; }
 
   static constexpr size_t cols = 10;
-  static constexpr size_t rows = 22;
+  static constexpr size_t rows = 40;
+  static constexpr size_t visible_rows = 20;
   std::array<label, cols * rows> data{};
 };
 
@@ -23,16 +25,19 @@ inline bool row_is_full(const playfield& field, int i) noexcept {
   return true;
 }
 
-inline void check_full_rows(playfield& field) noexcept {
-  for (int i = field.rows - 1; i >= 0; --i) {
+inline int check_full_rows(playfield& field) noexcept {
+  int result = 0;
+  for (int i = 0; i < field.visible_rows; ++i) {
     while (row_is_full(field, i)) {
-      for (int p = i - 1; p >= 0; --p) {
+      ++result;
+      for (int p = i; p < field.rows; ++p) {
         for (int q = 0; q < field.cols; ++q) {
-          field(p + 1, q) = field(p, q);
+          field(p, q) = field(p + 1, q);
         }
       }
     }
   }
+  return result;
 }
 
 inline bool is_colliding(const tetromino& t, const playfield& field) noexcept {
@@ -52,8 +57,8 @@ inline void transfer(const tetromino& t, playfield& field) noexcept {
 }
 
 inline tetromino last_position(tetromino t, const playfield& field) noexcept {
-  while (!is_colliding(t, field)) t.offset[0] += 1;
-  t.offset[0] -= 1;
+  while (!is_colliding(t, field)) t.offset[0] -= 1;
+  t.offset[0] += 1;
   return t;
 }
 }  // namespace tetris

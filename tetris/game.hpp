@@ -11,73 +11,33 @@
 namespace tetris {
 
 struct game {
-  void move_right() {
-    const auto tmp = ::tetris::move_right(current);
-    if (!is_colliding(tmp, field)) current = tmp;
-    last = last_position(current, field);
-  }
-
-  void move_left() {
-    const auto tmp = ::tetris::move_left(current);
-    if (!is_colliding(tmp, field)) current = tmp;
-    last = last_position(current, field);
-  }
-
-  void rotate() {
-    const auto tmp = ::tetris::rotate(current);
-    if (!is_colliding(tmp, field)) current = tmp;
-    last = last_position(current, field);
-  }
-
-  void new_tetromino() {
-    current = next;
-    next = tetromino{static_cast<label>(dist(rng))};
-    next.offset[1] = (playfield::cols - 1) / 2 - (next.size - 1) / 2;
-    last = last_position(current, field);
-  }
-
-  void new_round() {
-    transfer(current, field);
-    check_full_rows(field);
-    new_tetromino();
-    if (is_colliding(current, field)) game_over = true;
-  }
-
-  void advance() {
-    if (game_over) return;
-
-    const auto falling_piece = ::tetris::move_down(current);
-    if (is_colliding(falling_piece, field)) {
-      new_round();
-    } else {
-      current = falling_piece;
-    }
-    last = last_position(current, field);
-  }
-
-  void advance_to_next_round() {
-    if (game_over) return;
-    current = last_position(current, field);
-    new_round();
-  }
-
-  void restart() {
-    game_over = false;
-    new_tetromino();
-    new_tetromino();
-    field.clear();
-  }
-
-  game() { restart(); }
+  game();
+  void move_right();
+  void move_left();
+  void rotate();
+  void new_tetromino();
+  void new_round();
+  void advance();
+  void advance_to_next_round();
+  void restart();
+  void update();
 
   playfield field;
   tetromino current;
   tetromino last;
   tetromino next;
-  static constexpr float time_step = 0.5;
+  // static constexpr float time_step = 0.5;
+  static constexpr float time_steps[] = {
+      1.00000, 0.79300, 0.61780, 0.47273, 0.35520, 0.26200, 0.18968,
+      0.13473, 0.09388, 0.06415, 0.04298, 0.02822, 0.01815, 0.01144,
+      0.00706, 0.00426, 0.00252, 0.00146, 0.00082, 0.00046};
   std::mt19937 rng{std::random_device{}()};
   seven_bag_distribution dist{};
   bool game_over = false;
+  int lines_cleared = 0;
+  decltype(std::chrono::high_resolution_clock::now()) time =
+      std::chrono::high_resolution_clock::now();
+  int level = 1;
 };
 
 }  // namespace tetris
