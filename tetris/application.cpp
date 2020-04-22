@@ -116,7 +116,7 @@ void application::render() {
   window.clear();
   draw_playfield();
   // draw_next();
-  draw_last();
+  // draw_last();
   draw_tetrimino();
   window.display();
 }

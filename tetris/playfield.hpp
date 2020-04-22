@@ -30,7 +30,7 @@ inline int check_full_rows(playfield& field) noexcept {
   for (int i = 0; i < field.visible_rows; ++i) {
     while (row_is_full(field, i)) {
       ++result;
-      for (int p = i; p < field.rows; ++p) {
+      for (int p = i; p < field.visible_rows; ++p) {
         for (int q = 0; q < field.cols; ++q) {
           field(p, q) = field(p + 1, q);
         }
@@ -44,8 +44,8 @@ inline bool is_colliding(const tetromino& t, const playfield& field) noexcept {
   for (const auto& e : t.shape) {
     const auto p = t.offset[0] + e[0];
     const auto q = t.offset[1] + e[1];
-    if (q < 0 || q >= field.cols || p < 0 || p >= field.rows ||
-        field(p, q) != label::empty)
+    if (q < 0 || q >= field.cols || p < 0   ||
+        field(p, q) != label::empty) //|| p >= field.visible_rows)
       return true;
   }
   return false;

@@ -232,18 +232,19 @@ void game::new_tetromino() {
 
 void game::new_round() {
   transfer(current, field);
-  lines_cleared += check_full_rows(field);
-  level = 1 + lines_cleared / 5;
+  lines_cleared = lines_cleared + check_full_rows(field);
+  level = 1 + lines_cleared / 10;
   std::cout << "Lines Cleared:\t" << lines_cleared << "\n"
             << "Level:\t" << level << "\n"
             << "Gravity:\t" << time_steps[level - 1] << "\n\n";
   new_tetromino();
-  if (is_colliding(current, field)) game_over = true;
+  if (is_colliding(current, field)) {
+    game_over = true;
+  }
 }
 
 void game::advance() {
   if (game_over) return;
-
   const auto falling_piece = ::tetris::move_down(current);
   if (is_colliding(falling_piece, field)) {
     new_round();
