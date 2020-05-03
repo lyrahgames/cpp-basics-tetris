@@ -1,7 +1,9 @@
 #pragma once
 #include <array>
+// #include <chrono>
 #include <tetris/scoring_system.hpp>
 #include <tetris/tetromino.hpp>
+#include <thread>
 
 namespace tetris {
 
@@ -21,7 +23,6 @@ struct playfield {
 inline bool row_is_full(const playfield& field, int i) noexcept {
   for (int j = 0; j < field.cols; ++j)
     if (field(i, j) == label::empty) return false;
-
   return true;
 }
 
@@ -44,8 +45,8 @@ inline bool is_colliding(const tetromino& t, const playfield& field) noexcept {
   for (const auto& e : t.shape) {
     const auto p = t.offset[0] + e[0];
     const auto q = t.offset[1] + e[1];
-    if (q < 0 || q >= field.cols || p < 0   ||
-        field(p, q) != label::empty) //|| p >= field.visible_rows)
+    if (q < 0 || q >= field.cols || p < 0 ||
+        field(p, q) != label::empty)  //|| p >= field.visible_rows)
       return true;
   }
   return false;
@@ -61,4 +62,5 @@ inline tetromino last_position(tetromino t, const playfield& field) noexcept {
   t.offset[0] += 1;
   return t;
 }
+
 }  // namespace tetris

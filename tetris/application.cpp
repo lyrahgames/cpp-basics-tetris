@@ -39,7 +39,7 @@ inline sf::Color label_color(label l) noexcept {
 
 application::application() {
   sf::ContextSettings settings;
-  settings.antialiasingLevel = 8;
+  // settings.antialiasingLevel = 8;
   window.create(sf::VideoMode(500, 500), "Tetris", sf::Style::Default,
                 settings);
   window.setVerticalSyncEnabled(true);
@@ -47,14 +47,17 @@ application::application() {
 
   view.setCenter({g.field.cols / 2, g.field.visible_rows / 2});
   view.setSize(window.getSize().x, window.getSize().y);
-  view.zoom(1 / cell_size);
+  // view.zoom(1 / cell_size);
   window.setView(view);
 }
 
 void application::execute() {
   while (window.isOpen()) {
     g.update();
-    process_events();
+    if (g.game_over)
+      process_events_menu();
+    else
+      process_events();
     render();
   }
 }
@@ -112,12 +115,64 @@ void application::process_events() {
   }
 }
 
+// folgendes müsste noch in die Funktion process_events integriert werden
+void application::process_events_menu() {
+  sf::Event event{};
+  while (window.pollEvent(event)) {
+    switch (event.type) {
+      case sf::Event::Closed:
+        window.close();
+        break;
+
+      case sf::Event::MouseWheelMoved:
+        cell_size *= exp(-event.mouseWheel.delta * 0.05f);
+        cell_size = std::clamp(cell_size, min_cell_size, max_cell_size);
+        resize();
+        break;
+
+      case sf::Event::Resized:
+        resize();
+        break;
+
+      case sf::Event::KeyPressed:
+        switch (event.key.code) {
+          case sf::Keyboard::Escape:
+            window.close();
+            break;
+
+          case sf::Keyboard::Return:
+            g.game_over = false;
+            break;
+
+          case sf::Keyboard::R:
+            g.restart();
+            break;
+
+          case sf::Keyboard::Right:
+            g.move_right();
+            break;
+
+          case sf::Keyboard::Left:
+            g.move_left();
+            break;
+        }
+        break;
+    }
+  }
+}
+
 void application::render() {
   window.clear();
-  draw_playfield();
-  // draw_next();
-  // draw_last();
-  draw_tetrimino();
+  if (g.game_over) {
+    draw_menu();
+  } else {
+    draw_playfield();
+    // draw_next();
+    // draw_last();
+    draw_text("Level", 0, 255, 255, g.field.cols * 1.25,
+              g.field.visible_rows / 20, 1);
+    draw_tetrimino();
+  }
   window.display();
 }
 
@@ -205,6 +260,28 @@ void application::draw_last() {
     box.setOutlineColor({c.r, c.g, c.b, 128});
     window.draw(box);
   }
+}
+
+void application::draw_text(std::string text_in, const int r, const int g,
+                            const int b, float xposition, float yposition,
+                            float fontsize) {
+  sf::Font mainGameFont;
+  mainGameFont.loadFromFile("UbuntuMono-R.ttf");
+  sf::Text text;
+  text.setString(text_in);
+  text.setCharacterSize(fontsize);
+  text.setFillColor(sf::Color(r, g, b));
+  text.setFont(mainGameFont);
+  sf::FloatRect textRect = text.getGlobalBounds();
+  text.setOrigin(textRect.left + textRect.width / 2.0f,
+                 textRect.top + textRect.height / 2.0f);
+  text.setPosition(xposition, yposition);
+  window.draw(text);
+}
+
+void application::draw_menu() {
+  draw_text("difficulty", 0, 255, 255, g.field.cols / 2,
+            g.field.visible_rows / 2, 15);
 }
 
 }  // namespace tetris

@@ -14,6 +14,7 @@ class application {
 
  private:
   void process_events();
+  void process_events_menu();
   void render();
   void resize();
 
@@ -34,6 +35,9 @@ class application {
   void draw_tetrimino();
   void draw_last();
   void draw_next();
+  void draw_text(std::string text_in, const int r, const int g, const int b,
+                 float xposition, float yposition, float fontsize);
+  void draw_menu();
 
   ::tetris::game g;
 };

@@ -233,14 +233,12 @@ void game::new_tetromino() {
 void game::new_round() {
   transfer(current, field);
   lines_cleared = lines_cleared + check_full_rows(field);
-  level = 1 + lines_cleared / 10;
+  level = 1 + lines_cleared / 5;
   std::cout << "Lines Cleared:\t" << lines_cleared << "\n"
             << "Level:\t" << level << "\n"
             << "Gravity:\t" << time_steps[level - 1] << "\n\n";
   new_tetromino();
-  if (is_colliding(current, field)) {
-    game_over = true;
-  }
+  if (is_colliding(current, field)) game_over = true;
 }
 
 void game::advance() {
@@ -261,7 +259,7 @@ void game::advance_to_next_round() {
 }
 
 void game::restart() {
-  game_over = false;
+  game_over = true;  // false;
   lines_cleared = 0;
   level = 1;
   new_tetromino();
