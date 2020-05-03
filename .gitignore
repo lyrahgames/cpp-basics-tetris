@@ -3,6 +3,8 @@
 
 !*.hpp
 !*.cpp
+!*.ttf
+!*.otf
 
 !buildfile
 !bootstrap.build
